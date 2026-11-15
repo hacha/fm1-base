@@ -1341,6 +1341,20 @@ static void fm1_main(void)
     fm1b_dbg.max_us = 0;
     fm1_input_init();
     fm1_adc_init();
+    {   /* MASTER read before the audio starts (RhinoTiger: the loop reads it only after the boot's waits, and till then
+         * its middle sounded, the pot at 0 or not): a few readings, the last of them kept, the smoothing begun there */
+        int32_t a = -1, i;
+        for (i = 0; i < 4; i++) {
+            int32_t r = fm1_adc_read(FM1_ADC_MASTER);
+            if (r >= 0)
+                a = r;
+            fm1_delay_ms(1);
+        }
+        if (a >= 0) {
+            knob = a * 16;
+            master_pos = (uint32_t)(knob / 4);
+        }
+    }
     panel_init();
     led_pos_init();
 #if FM1B_CPU2
